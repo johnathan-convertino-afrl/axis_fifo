@@ -1,0 +1,423 @@
+//******************************************************************************
+// @file    tb_stim_axis.v
+// @author  JAY CONVERTINO
+// @date    2022.10.24
+// @brief   Generic AXIS test bench modules (stimulators) with verification.
+// @details All modules for AXIS test bench top are here. There will be loop of
+//          tests the axis core must pass. In these tests is where the end user
+//          must alter the checks if the input does not equal the output. As 
+//          these were designed with a FIFO in mind.
+//******************************************************************************
+
+`timescale 1 ns/10 ps
+
+// constant clock generator
+module clk_stimulator #(
+    parameter CLOCKS = 2, // # of clocks
+    parameter CLOCK_BASE = 1000000, // clock time base mhz
+    parameter CLOCK_INC = 100, // clock time diff mhz
+    parameter RESETS = 2, // # of resets
+    parameter RESET_BASE = 200, // time to stay in reset
+    parameter RESET_INC = 100 // time diff for other resets
+  ) clk_stim
+  (
+    //clk out ... maybe a vector of clks with diff speeds.
+    output [CLOCKS-1:0] clkv,
+    //rstn out ... maybe a vector of rsts with different off times
+    output [RESETS-1:0] rstnv,
+    output [RESETS-1:0] rstv
+  );
+  
+  // scale clock base to a clock period in MHz. Good up to 1 GHz.
+  localparam lp_PERIOD = 1000000000/CLOCK_BASE
+  
+  genvar clk_index;
+  genvar rst_index;
+  
+  generate
+    for (clk_index = 0; clk_index < CLOCKS; clk_index = clk_index + 1)
+    begin
+      //create base clocking core
+      always
+      begin
+        clkv[clk_index] <= ~clkv[clk_index];
+    
+        #((lp_PERIOD+(CLOCK_INC*clk_index))/2);
+      end
+    end
+  endgenerate
+  
+  generate
+    for (rst_index = 0; rst_index < RESETS; rst_index = rst_index + 1)
+    begin
+      initial
+      begin
+        rstnv[rst_index] <= 1'b0;
+        
+        rstv[rst_index] <= 1'b1;
+        
+        #(RESET_BASE-(RESET_INC*rst_index))
+        
+        rstnv[rst_index] <= 1'b1;
+        
+        rstv[rst_index] <= 1'b0;
+      end
+    end
+  endgenerate
+
+endmodule
+  
+// test case stimulator for axis core.
+module axis_stimulator #(
+    parameter FIFO_DEPTH = 1,
+    parameter BUS_WIDTH = 1,
+    parameter USER_WIDTH = 1,
+    parameter DEST_WIDTH = 1,
+    parameter FILE_IN = in.bin,
+    parameter FILE_OUT = out.bin,
+    parameter PATTERN = 8'h55,
+    parameter CNT_START = 0,
+    parameter TEST_REPEAT = 255
+  ) axis_stim
+  (
+    // output to dut
+    input  m_axis_aclk,
+    input  m_axis_arstn,
+    output m_axis_tvalid,
+    input  m_axis_tready,
+    output [(BUS_WIDTH*8)-1:0] m_axis_tdata,
+    output [BUS_WIDTH-1:0]     m_axis_tkeep,
+    output m_axis_tlast,
+    output [USER_WIDTH-1:0] m_axis_tuser,
+    output [DEST_WIDTH-1:0] m_axis_tdest,
+    // input from dut
+    input  s_axis_aclk,
+    input  s_axis_arstn,
+    input  s_axis_tvalid,
+    output s_axis_tready,
+    input  [(BUS_WIDTH*8)-1:0] s_axis_tdata,
+    input  [BUS_WIDTH-1:0]     s_axis_tkeep,
+    input  s_axis_tlast,
+    input  [USER_WIDTH-1:0] s_axis_tuser,
+    input  [DEST_WIDTH-1:0] s_axis_tdest
+  );
+  
+  // local parameters
+  // test states explicit for s_axis random machine
+  localparam start          = 4'h0;
+  localparam counter_test   = 4'h1;
+  localparam pattern_test   = 4'h2;
+  localparam file_test      = 4'h3;
+  localparam test_complete  = 4'h4;
+  localparam finish         = 4'h5;
+  // rand states
+  localparam no_rnd_ready     = 4'h1;
+  localparam reset_test_state = 4'h2;
+  localparam rnd_ready        = 4'h3;
+
+  // global variables and registers
+  // global queue for tests
+  reg [(BUS_WIDTH*8)+USER_WIDTH+DEST_WIDTH-1:0] g_queue[FIFO_DEPTH:0];
+  reg [31:0] head = 0;
+  reg [31:0] tail = 0;
+  // state machine for tests
+  reg [3:0] test_state  = start;
+  reg [3:0] rnd_state   = no_rnd_ready;
+  
+  integer index = 0;
+  
+  // all master axis tasks
+  always @(posedge m_axis_aclk)
+  begin
+    if(m_axis_arstn == 1'b0)
+    begin
+      // reset signals
+      m_axis_tvalid <= 0;
+      m_axis_tdata  <= 0;
+      m_axis_tkeep  <= 0;
+      m_axis_tlast  <= 0;
+      m_axis_tuser  <= 0;
+      m_axis_tdest  <= 0;
+    end else begin
+      // run tests
+      case (state)
+        // controls state machine for both??
+        start: begin
+          // keep signals at 0 since when we only start and then end and never come back to this state.
+          $display("Starting Test Cases.");
+          
+          m_axis_tvalid <= 0;
+          m_axis_tdata  <= 0;
+          m_axis_tkeep  <= 0;
+          m_axis_tlast  <= 0;
+          m_axis_tuser  <= 0;
+          m_axis_tdest  <= 0;
+        end
+        counter_test: begin
+          // gererate data
+          genCounterData(m_axis_tdata, m_axis_tvalid, m_axis_tready, m_axis_tkeep, m_axis_tlast, m_axis_tuser, m_axis_tdest);
+        end
+        pattern_test: begin
+          // gererate data
+          genPatternData(m_axis_tdata, m_axis_tvalid, m_axis_tready, m_axis_tkeep, m_axis_tlast, m_axis_tuser, m_axis_tdest);
+        end
+        file_test: begin
+          // gererate data
+          readFileData(m_axis_tdata, m_axis_tvalid, m_axis_tready, m_axis_tkeep, m_axis_tlast, m_axis_tuser, m_axis_tdest);
+        end
+        test_complete: begin
+          $display("Verification finshed, please see output for errors.");
+        end
+        default: begin
+          // we are done, or in some odd state.
+          m_axis_tvalid <= 0;
+          m_axis_tdata  <= 0;
+          m_axis_tkeep  <= 0;
+          m_axis_tlast  <= 0;
+          m_axis_tuser  <= 0;
+          m_axis_tdest  <= 0;
+        end
+      endcase
+      
+      // reading from outputs? Verilog thing I think.
+      if(m_axis_tready == 1'b1) pushQueueData({m_axis_tdata, m_axis_tuser, m_axis_tdest});
+      
+      // when we have tlast, and are ready, move to next state.
+      if((m_axis_tlast == 1'b1) && (m_axis_tready == 1'b1))
+      begin
+        m_axis_tdata  <= 0;
+        m_axis_tuser  <= 0;
+        m_axis_tkeep  <= 0;
+        m_axis_tdest  <= 0;
+        m_axis_tlast  <= 0;
+        m_axis_tvalid <= 0;
+      end
+    end
+  end
+  
+  // all slave axis tasks
+  always @(posedge s_axis_aclk)
+  begin
+    if(s_axis_arstn == 1'b0)
+    begin
+      // reset signals
+      s_axis_tready <= 0;
+      test_state  <= start;
+      rnd_state   <= no_rnd_ready;
+    end else begin
+
+      if(test_state == start) test_state <= counter_test;
+      
+      if((test_state > start) && (test_state < test_complete))
+      begin
+        // if set to random, gen random.
+        // based on current ready and valid, pull data from fifo and queue
+        // verify data
+        // on error, display
+        // once verified, go to next state.
+        // if last and verified test_state++;
+      end
+      
+      case (rnd_state)
+      begin
+        start: begin
+          rnd_state     <= no_rnd_ready;
+          
+          s_axis_tready <= 1'b1;
+        end
+        no_rnd_ready: begin
+          rnd_state <= no_rnd_ready;
+          
+          s_axis_tready <= 1'b1;
+          
+          if(test_state == test_complete) rnd_state <= reset_test_state;
+        end
+        reset_test_state: begin
+          s_axis_tready <= 0;
+          test_state    <= counter_test;
+          rnd_state     <= rnd_ready;
+        end
+        rnd_ready: begin
+          rnd_state <= rnd_ready;
+          
+          s_axis_tready <= $random % 2;
+          
+          if(test_state == test_complete) 
+          begin
+            test_state  <= finish;
+            rnd_state   <= finish;
+          end
+        end
+        finish: begin
+          rnd_state <= finish;
+          s_axis_tready <= 0;
+      endcase
+    end
+  end
+  
+  //create base tests, these are based on a fifo. Should be altered for the target DUT.
+  
+  // Base test tasks for master axis interface
+  // Send stream of counter data
+  task genCounterData;
+    output  [(BUS_WIDTH*8)-1:0] o_data;
+    output                      o_valid;
+    input                       i_ready;
+    output  [BUS_WIDTH-1:0]     o_keep;
+    output                      o_last;
+    output  [USER_WIDTH-1:0]    o_user;
+    output  [DEST_WIDTH-1:0]    o_dest;
+  begin
+    //happens every clock cycle
+    reg [(BUS_WIDTH*8)-1:0] counter = CNT_START;
+    
+    o_data  <= counter;
+    o_valid <= 1'b1;
+    o_last  <= 1'b0;
+    o_keep  <= {BUS_WIDTH{1'b1}};
+    o_user  <= {USER_WIDTH{4'h5}};
+    o_dest  <= {DEST_WIDTH{4'h5}};
+    
+    if(i_ready == 1'b1)
+    begin
+      counter <= counter + 1;
+    end
+    
+    if(counter >= TEST_REPEAT)
+      o_last  <= 1'b1;
+      counter <= counter;
+    end
+    
+  endtask
+  
+  // Generate stream of same repetitive pattern data
+  task genPatternData;
+    output  [(BUS_WIDTH*8)-1:0] o_data;
+    output                      o_valid;
+    input                       i_ready;
+    output  [BUS_WIDTH-1:0]     o_keep;
+    output                      o_last;
+    output  [USER_WIDTH-1:0]    o_user;
+    output  [DEST_WIDTH-1:0]    o_dest;
+  begin
+    //happens every clock cycle
+    integer counter = 0;
+    
+    o_data  <= PATTERN;
+    o_valid <= 1'b1;
+    o_last  <= 1'b0;
+    o_keep  <= {BUS_WIDTH{1'b1}};
+    o_user  <= {USER_WIDTH{4'hA}};
+    o_dest  <= {DEST_WIDTH{4'hA}};
+    
+    if(i_ready == 1'b1)
+    begin
+      counter <= counter + 1;
+    end
+    
+    if(counter >= TEST_REPEAT)
+      o_last  <= 1'b1;
+      counter <= counter;
+    end
+    
+  endtask
+  
+  // Read a file and stream data
+  task readFileData;
+    output  [(BUS_WIDTH*8)-1:0] o_data;
+    output                      o_valid;
+    input                       i_ready;
+    output  [BUS_WIDTH-1:0]     o_keep;
+    output                      o_last;
+    output  [USER_WIDTH-1:0]    o_user;
+    output  [DEST_WIDTH-1:0]    o_dest;
+  begin
+    // happens every clock cycle
+    // This logic needs work, ready/tlast is crap
+    reg  [(BUS_WIDTH*8)-1:0] reg_data = 0;
+    integer fd = $fopen(FILE_IN, "rb");
+    integer amt_read = $fread(reg_data, fd);
+    
+    if(i_ready == 1'b1)
+    begin
+      amt_read = $fread(reg_data, fd);
+    end
+    
+    o_data  <= reg_data;
+    o_valid <= 1'b1;
+    o_last  <= 1'b0;
+    o_keep  <= {(BUS_WIDTH-amt_read){1'b0}, amt_read{1'b1}};
+    o_user  <= {USER_WIDTH{4'hA}};
+    o_dest  <= {DEST_WIDTH{4'hA}};
+    
+    if($feof(file) != 0)
+    begin
+      o_last  <= 1'b1;
+    end
+    
+  endtask
+  
+  // Write a file from stream data
+  task writeFileData
+    input [(BUS_WIDTH*8)-1:0] i_data;
+    input                     i_last;
+  begin
+    // write file data on clock cycle
+    integer fd = $fopen(FILE_OUT, "wb");
+    
+    $fwrite(i_data, fd);
+    
+    if(i_last == 1'b1)
+    begin
+      $fclose(fd);
+    end
+  endtask
+  
+  //helper tasks
+  
+  task pushQueueData;
+    input [(BUS_WIDTH*8)+USER_WIDTH+DEST_WIDTH-1:0] i_data;
+  begin
+    //each valid data byte gets pushed to queue
+    head <= head + 1;
+    g_queue[head] <= i_data;
+    
+    if(head-1 == tail)
+      head <= head;
+      g_queue[head] <= g_queue[head];
+    end
+  end
+  
+  task popQueueData;
+    output [(BUS_WIDTH*8)+USER_WIDTH+DEST_WIDTH-1:0] o_data;
+  begin
+    //each valid data byte get popped from queue
+    tail <= tail + 1;
+    o_data <= g_queue[tail];
+    
+    if(head == tail)
+    begin
+      tail <= tail;
+      o_data <= o_data;
+    end
+  end
+  
+  task clearQueueData;
+  begin
+    //clear the global queue
+    integer index = 0;
+    
+    for(index = FIFO_DEPTH - 1; index >= 0; index = index - 1) g_queue[index] <= 0;
+
+  end
+  
+  task validateData;
+    input [(BUS_WIDTH*8)+USER_WIDTH+DEST_WIDTH-1:0] dut_data;
+    input [(BUS_WIDTH*8)+USER_WIDTH+DEST_WIDTH-1:0] queue_data;
+  begin
+    // compare data
+    if(dut_data != queue_data) $display("Data mismatch");
+  end
+  
+endmodule
+

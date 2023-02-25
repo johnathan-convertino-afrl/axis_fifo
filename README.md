@@ -52,3 +52,18 @@
 
 * fusesoc_info.core created.
 * Simulation uses icarus to run data through the core.
+
+
+```
+FUTURE UNIT TEST STUFFS:
+
+  unit_test:
+    <<: *default
+    default_tool: icarus
+    filesets_append: [ut]
+    tools:
+      icarus:
+        timescale : 1ns/1ns
+        vvp_options : [-M, "`cocotb-config --lib-dir`", "-m", libcococtbvpi_icarus]
+    toplevel : [axis_send_packet?]
+```

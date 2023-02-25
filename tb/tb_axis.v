@@ -31,12 +31,18 @@
 
 `timescale 1 ns/10 ps
 
-module tb_axis;
-  //parameter or local param bus, user and dest width? and files as well? 
+module tb_axis #(
+  parameter IN_FILE_NAME = "in.bin",
+  parameter OUT_FILE_NAME = "out.bin",
+  parameter FIFO_DEPTH = 128,
+  parameter RAND_READY = 0
+  );
   
-  localparam BUS_WIDTH  = 2;
-  localparam USER_WIDTH = 1;
-  localparam DEST_WIDTH = 1;
+  //parameter or local param bus, user and dest width? and files as well?
+  
+  localparam BUS_WIDTH      = 2;
+  localparam USER_WIDTH     = 1;
+  localparam DEST_WIDTH     = 1;
   
   localparam CLK_PERIOD = 500;
   localparam RST_PERIOD = 1000;
@@ -74,7 +80,7 @@ module tb_axis;
   clk_stimulus #(
     .CLOCKS(2), // # of clocks
     .CLOCK_BASE(1000000), // clock time base mhz
-    .CLOCK_INC(1000), // clock time diff mhz
+    .CLOCK_INC(10), // clock time diff mhz
     .RESETS(2), // # of resets
     .RESET_BASE(2000), // time to stay in reset
     .RESET_INC(100) // time diff for other resets
@@ -90,7 +96,7 @@ module tb_axis;
     .BUS_WIDTH(BUS_WIDTH),
     .USER_WIDTH(USER_WIDTH),
     .DEST_WIDTH(DEST_WIDTH),
-    .FILE("in.bin")
+    .FILE(IN_FILE_NAME)
   ) slave_axis_stim (
     // output to slave
     .m_axis_aclk(tb_stim_clk),
@@ -105,7 +111,7 @@ module tb_axis;
   );
   
   axis_fifo #(
-    .FIFO_DEPTH(8),
+    .FIFO_DEPTH(FIFO_DEPTH),
     .COUNT_WIDTH(8),
     .BUS_WIDTH(BUS_WIDTH),
     .USER_WIDTH(USER_WIDTH),
@@ -145,7 +151,8 @@ module tb_axis;
     .BUS_WIDTH(BUS_WIDTH),
     .USER_WIDTH(USER_WIDTH),
     .DEST_WIDTH(DEST_WIDTH),
-    .FILE("out.bin")
+    .RAND_READY(RAND_READY),
+    .FILE(OUT_FILE_NAME)
   ) master_axis_stim (
     // write
     .s_axis_aclk(tb_dut_clk),

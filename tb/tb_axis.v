@@ -66,6 +66,8 @@ module tb_axis #(
   wire [USER_WIDTH-1:0]     tb_stim_user;
   wire [DEST_WIDTH-1:0]     tb_stim_dest;
   
+  wire                      tb_eof;
+  
   reg         tb_cnt_clk  = 0;
   reg         tb_cnt_rstn = 0;
   wire [8:0]  tb_cnt_data;
@@ -107,7 +109,8 @@ module tb_axis #(
     .m_axis_tkeep(tb_stim_keep),
     .m_axis_tlast(tb_stim_last),
     .m_axis_tuser(tb_stim_user),
-    .m_axis_tdest(tb_stim_dest)
+    .m_axis_tdest(tb_stim_dest),
+    .eof(tb_eof)
   );
   
   axis_fifo #(
@@ -163,7 +166,8 @@ module tb_axis #(
     .s_axis_tkeep(tb_dut_keep),
     .s_axis_tlast(tb_dut_last),
     .s_axis_tuser(tb_dut_user),
-    .s_axis_tdest(tb_dut_dest)
+    .s_axis_tdest(tb_dut_dest),
+    .eof(1'b0)
   );
   
 endmodule

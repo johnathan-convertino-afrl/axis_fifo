@@ -1,5 +1,5 @@
 # AXIS FIFO
-## FIFO for AXI streaming
+### FIFO for AXI streaming
 ---
 
    author: Jay Convertino  
@@ -11,8 +11,6 @@
    license: MIT   
    
 ---
-
-![rtl image](./rtl.png)
 
 ### Dependencies
 #### Build
@@ -52,6 +50,15 @@
 
 * fusesoc_info.core created.
 * Simulation uses icarus to run data through the core.
+
+#### TARGETS
+* RUN WITH: (fusesoc run --target=sim VENDER:CORE:NAME:VERSION)
+  - default (for IP integration builds)
+  - sim
+  - sim_rand_data
+  - sim_rand_ready_rand_data
+  - sim_8bit_count_data
+  - sim_rand_ready_8bit_count_data
 
 
 ```

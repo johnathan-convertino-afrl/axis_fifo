@@ -52,6 +52,7 @@
 * Simulation uses icarus to run data through the core.
 
 #### TARGETS
+
 * RUN WITH: (fusesoc run --target=sim VENDER:CORE:NAME:VERSION)
   - default (for IP integration builds)
   - sim

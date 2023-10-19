@@ -12,6 +12,13 @@
    
 ---
 
+### Version
+#### Current
+  - V1.0.0 - initial release
+
+#### Previous
+  - none
+
 ### Dependencies
 #### Build
   - AFRL:buffer:fifo
@@ -20,6 +27,7 @@
 #### Simulation
   - AFRL:simulation:axis_stimulator
   - AFRL:simulation:clock_stimulator
+  - AFRL:utility:sim_helper
 
 ### IP USAGE
 #### Parameters

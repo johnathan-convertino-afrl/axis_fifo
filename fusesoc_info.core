@@ -31,10 +31,12 @@ filesets:
 
 targets:
   default: &default
+    description: Default for IP intergration.
     filesets: [src, dep]
-    
+
   sim: &sim
     <<: *default
+    description: Constant data value with file check.
     default_tool: icarus
     toplevel: tb_axis
     hooks:
@@ -45,33 +47,37 @@ targets:
       - OUT_FILE_NAME
       - RAND_READY
       - FIFO_DEPTH
-  
+
   sim_rand_data:
     <<: *sim
+    description: Feed random data input with file check
     parameters:
       - IN_FILE_NAME=random.bin
       - OUT_FILE_NAME=out_random.bin
       - RAND_READY
       - FIFO_DEPTH
-      
+
   sim_rand_ready_rand_data:
     <<: *sim
+    description: Feed random data input, and randomize the read ready on the output. Perform output file check.
     parameters:
       - IN_FILE_NAME=random.bin
       - OUT_FILE_NAME=out_random.bin
       - RAND_READY=1
       - FIFO_DEPTH
-      
+
   sim_8bit_count_data:
     <<: *sim
+    description: Feed a counter data as input, perform file check.
     parameters:
       - IN_FILE_NAME=8bit_count.bin
       - OUT_FILE_NAME=out_8bit_count.bin
       - RAND_READY
       - FIFO_DEPTH
-  
+
   sim_rand_ready_8bit_count_data:
     <<: *sim
+    description: Feed a counter data a input, and randomize the read ready on the output. Perform output file check.
     parameters:
       - IN_FILE_NAME=8bit_count.bin
       - OUT_FILE_NAME=out_8bit_count.bin

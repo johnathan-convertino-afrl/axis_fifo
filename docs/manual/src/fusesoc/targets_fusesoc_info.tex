@@ -1,0 +1,69 @@
+\subsubsection{fusesoc\_info Targets}
+\begin{itemize}
+\item default
+	\begin{itemize}
+	\item[$\space$] Info: Default for IP intergration.
+	\item src
+	\item dep
+	\end{itemize}
+\item sim
+	\begin{itemize}
+	\item[$\space$] Info: Constant data value with file check.
+	\item src
+	\item dep
+	\item tb
+	\item dep\_tb
+	\item IN\_FILE\_NAME
+	\item OUT\_FILE\_NAME
+	\item RAND\_READY
+	\item FIFO\_DEPTH
+	\end{itemize}
+\item sim\_rand\_data
+	\begin{itemize}
+	\item[$\space$] Info: Feed random data input with file check
+	\item src
+	\item dep
+	\item tb
+	\item dep\_tb
+	\item IN\_FILE\_NAME=random.bin
+	\item OUT\_FILE\_NAME=out\_random.bin
+	\item RAND\_READY
+	\item FIFO\_DEPTH
+	\end{itemize}
+\item sim\_rand\_ready\_rand\_data
+	\begin{itemize}
+	\item[$\space$] Info: Feed random data input, and randomize the read ready on the output. Perform output file check.
+	\item src
+	\item dep
+	\item tb
+	\item dep\_tb
+	\item IN\_FILE\_NAME=random.bin
+	\item OUT\_FILE\_NAME=out\_random.bin
+	\item RAND\_READY=1
+	\item FIFO\_DEPTH
+	\end{itemize}
+\item sim\_8bit\_count\_data
+	\begin{itemize}
+	\item[$\space$] Info: Feed a counter data as input, perform file check.
+	\item src
+	\item dep
+	\item tb
+	\item dep\_tb
+	\item IN\_FILE\_NAME=8bit\_count.bin
+	\item OUT\_FILE\_NAME=out\_8bit\_count.bin
+	\item RAND\_READY
+	\item FIFO\_DEPTH
+	\end{itemize}
+\item sim\_rand\_ready\_8bit\_count\_data
+	\begin{itemize}
+	\item[$\space$] Info: Feed a counter data a input, and randomize the read ready on the output. Perform output file check.
+	\item src
+	\item dep
+	\item tb
+	\item dep\_tb
+	\item IN\_FILE\_NAME=8bit\_count.bin
+	\item OUT\_FILE\_NAME=out\_8bit\_count.bin
+	\item RAND\_READY=1
+	\item FIFO\_DEPTH
+	\end{itemize}
+\end{itemize}

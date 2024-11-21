@@ -1,33 +1,70 @@
 //******************************************************************************
-/// @FILE    axis_fifo_ctrl.v
-/// @AUTHOR  JAY CONVERTINO
-/// @DATE    2021.06.29
-/// @BRIEF   Wraps util_fifo with an axi streaming interface.
-///
-/// @LICENSE MIT
-///  Copyright 2021 Jay Convertino
-///
-///  Permission is hereby granted, free of charge, to any person obtaining a copy
-///  of this software and associated documentation files (the "Software"), to 
-///  deal in the Software without restriction, including without limitation the
-///  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
-///  sell copies of the Software, and to permit persons to whom the Software is 
-///  furnished to do so, subject to the following conditions:
-///
-///  The above copyright notice and this permission notice shall be included in 
-///  all copies or substantial portions of the Software.
-///
-///  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-///  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-///  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-///  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-///  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-///  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-///  IN THE SOFTWARE.
+// file:    axis_ctrl_fifo.v
+//
+// author:  JAY CONVERTINO
+//
+// date:    2021/06/29
+//
+// about:   Brief
+// Wraps the standard FIFO with an axi streaming interface.
+//
+// license: License MIT
+// Copyright 2021 Jay Convertino
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//
 //******************************************************************************
 
 `timescale 1ns/100ps
 
+/*
+ * Module: axis_fifo_ctrl
+ *
+ * AXIS fifo control
+ *
+ * Parameters:
+ *
+ *    BUS_WIDTH   - Width of the axis data bus input/output in bytes.
+ *    FIFO_WIDTH  -
+ *    FIFO_POWER  -
+ *    USER_WIDTH  - Width of the axis user bus input/output in bits.
+ *    DEST_WIDTH  - Width of the axis dest bus input/output in bits.
+ *    PACKET_MODE - Set axis fifo to wait for tlast before allowing a read on master port output.
+ *
+ * Ports:
+ *
+ *    m_axis_aclk       - Clock for AXIS
+ *    m_axis_arstn      - Negative reset for AXIS
+ *    m_axis_tvalid     - When active high the output data is valid
+ *    m_axis_tready     - When set active high the output device is ready for data.
+ *    m_axis_tdata      - Output data
+ *    m_axis_tkeep      - Output valid byte indicator
+ *    m_axis_tlast      - Indicates last word in stream.
+ *    m_axis_tuser      - Output user bus
+ *    m_axis_tdest      - Output destination
+ *    s_axis_tlast      - Is this the last word in the stream (active high).
+ *    rd_en             - Active high enable of read interface.
+ *    rd_valid          - Active high output that the data is valid.
+ *    rd_data           - Output data
+ *    rd_empty          - Active high output when read is empty.
+ *    wr_full           - Active high output that the FIFO is full.
+ */
 module axis_fifo_ctrl #(
     parameter BUS_WIDTH  = 1,
     parameter FIFO_WIDTH = 8,
@@ -37,25 +74,21 @@ module axis_fifo_ctrl #(
     parameter PACKET_MODE= 0
   )
   (
-    // read axis
-    input  m_axis_aclk,
-    input  m_axis_arstn,
-    output m_axis_tvalid,
-    input  m_axis_tready,
-    output [(BUS_WIDTH*8)-1:0] m_axis_tdata,
-    output [BUS_WIDTH-1:0] m_axis_tkeep,
-    output m_axis_tlast,
-    output [USER_WIDTH-1:0] m_axis_tuser,
-    output [DEST_WIDTH-1:0] m_axis_tdest,
-    // write axis
-    input s_axis_tlast,
-    // read fifo
-    output rd_en,
-    input rd_valid,
-    input [(FIFO_WIDTH*8)-1:0] rd_data,
-    input rd_empty,
-    // write fifo
-    input wr_full
+    input                         m_axis_aclk,
+    input                         m_axis_arstn,
+    output                        m_axis_tvalid,
+    input                         m_axis_tready,
+    output  [(BUS_WIDTH*8)-1:0]   m_axis_tdata,
+    output  [BUS_WIDTH-1:0]       m_axis_tkeep,
+    output                        m_axis_tlast,
+    output  [USER_WIDTH-1:0]      m_axis_tuser,
+    output  [DEST_WIDTH-1:0]      m_axis_tdest,
+    input                         s_axis_tlast,
+    output                        rd_en,
+    input                         rd_valid,
+    input   [(FIFO_WIDTH*8)-1:0]  rd_data,
+    input                         rd_empty,
+    input                         wr_full
   );
           
   // break apart data from fifo into the axis signals.

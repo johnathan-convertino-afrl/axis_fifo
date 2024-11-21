@@ -1,5 +1,8 @@
 # AXIS FIFO
 ### FIFO for AXI streaming
+
+![image](docs/manual/img/AFRL.png)
+
 ---
 
    author: Jay Convertino  
@@ -19,7 +22,13 @@
 #### Previous
   - none
 
-### Dependencies
+### DOCUMENTATION
+  For detailed usage information, please navigate to one of the following sources. They are the same, just in a different format.
+
+  - [axis_fifo.pdf](docs/manual/axis_fifo.pdf)
+  - [github page](https://johnathan-convertino-afrl.github.io/axis_fifo/)
+
+### DEPENDENCIES
 #### Build
   - AFRL:buffer:fifo
   - AFRL:utility:helper:1.0.0
@@ -29,8 +38,7 @@
   - AFRL:simulation:clock_stimulator
   - AFRL:utility:sim_helper
 
-### IP USAGE
-#### Parameters
+### PARAMETERS
 
 * FIFO_DEPTH : Depth of the fifo, must be a power of two number(divisable aka 256 = 2^8). Any non-power of two will be rounded up to the next closest.
 * COUNT_WIDTH: Data count output width in bits. Should be the same power of two as fifo depth(256 for fifo depth... this should be 8).
@@ -39,7 +47,8 @@
 * DEST_WIDTH : Width of the axis dest bus input/output in bits.
 * RAM_TYPE   : RAM type setting.
 * PACKET_MODE: Set axis fifo to wait for tlast before allowing a read on master port output.
-* COUNT_DELAY: Delay count by one clock cycle of the data count clock. Set this to 0 to disable (only disable if read/write/data_count are on the same clock domain!). 
+* COUNT_DELAY: Delay count by one clock cycle of the data count clock.
+* COUNT_ENA  : Set this to 0 to disable (only disable if read/write/data_count are on the same clock domain!).
 
 ### COMPONENTS
 #### SRC
@@ -54,12 +63,12 @@
 * tb_axis.v
 * in.bin
   
-### fusesoc
+### FUSESOC
 
 * fusesoc_info.core created.
 * Simulation uses icarus to run data through the core.
 
-#### TARGETS
+#### Targets
 
 * RUN WITH: (fusesoc run --target=sim VENDER:CORE:NAME:VERSION)
   - default (for IP integration builds)
@@ -68,18 +77,3 @@
   - sim_rand_ready_rand_data
   - sim_8bit_count_data
   - sim_rand_ready_8bit_count_data
-
-
-```
-FUTURE UNIT TEST STUFFS:
-
-  unit_test:
-    <<: *default
-    default_tool: icarus
-    filesets_append: [ut]
-    tools:
-      icarus:
-        timescale : 1ns/1ns
-        vvp_options : [-M, "`cocotb-config --lib-dir`", "-m", libcococtbvpi_icarus]
-    toplevel : [axis_send_packet?]
-```

@@ -175,7 +175,7 @@ module axis_fifo #(
       .wr_clk    (s_axis_aclk),
       .wr_rstn   (s_axis_arstn),
       .wr_en     (s_axis_tvalid),
-      .wr_ack    (open),
+      .wr_ack    (),
       .wr_data   (s_axis_concat_data),
       .wr_full   (s_wr_full),
       .data_count_clk  (data_count_aclk),

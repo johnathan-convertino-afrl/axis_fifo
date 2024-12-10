@@ -14,9 +14,10 @@ filesets:
     files:
       - tb/tb_axis.v : { file_type: verilogSource }
 
-  ut:
+  tb_cocotb:
     files:
-      - ut/cocotb_axis_verification.py : { file_type : user, copyto : . }
+      - tb/tb_cocotb.py : {file_type : user, copyto : .}
+      - tb/tb_cocotb.v : { file_type: verilogSource }
       
   dep:
     depend:
@@ -83,6 +84,21 @@ targets:
       - OUT_FILE_NAME=out_8bit_count.bin
       - RAND_READY=1
       - FIFO_DEPTH
+
+  sim_cocotb:
+    <<: *default
+    description: Cocotb unit tests
+    flow: sim
+    flow_options:
+      tool: icarus
+      cocotb_module: tb_cocotb
+      timescale: 1ns/1ns
+      vcs_options: [-timescale=1ns/1ns]
+    filesets_append: [tb_cocotb]
+    toplevel: tb_cocotb
+    parameters:
+      - FIFO_DEPTH
+      - BUS_WIDTH
       
 parameters:
   RAND_READY:
@@ -107,6 +123,12 @@ parameters:
     datatype    : file
     default     : out_const_data.bin
     description : output file name
+    paramtype   : vlogparam
+
+  BUS_WIDTH:
+    datatype    : int
+    default     : 8
+    description : axi streaming data bus size in bytes.
     paramtype   : vlogparam
     
 scripts:

@@ -136,7 +136,7 @@ module axis_fifo #(
   wire s_rd_en;
   wire [(c_FIFO_WIDTH*8)-1:0] s_rd_data;
   
-  assign s_axis_tready = ~s_wr_full;
+  assign s_axis_tready = ~s_wr_full & s_axis_arstn;
   
   assign s_axis_concat_data[(c_FIFO_WIDTH*8)-1:((BUS_WIDTH*8) + c_TDATA_OFFSET)] = 0;
   assign s_axis_concat_data[((BUS_WIDTH*8)-1+c_TDATA_OFFSET):c_TDATA_OFFSET]  = s_axis_tdata;

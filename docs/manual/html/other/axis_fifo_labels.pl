@@ -2,7 +2,7 @@
 # Associate labels original text with physical files.
 
 
-$key = q/Module_Documentation/;
+$key = q/Code_Documentation/;
 $external_labels{$key} = "$URL/" . q|axis_fifo_node18.html|; 
 $noresave{$key} = "$nosave";
 

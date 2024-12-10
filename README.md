@@ -61,7 +61,8 @@
 #### TB
 
 * tb_axis.v
-* in.bin
+* tb_cocotb.v
+* tb_cocotb.py
   
 ### FUSESOC
 
@@ -77,3 +78,4 @@
   - sim_rand_ready_rand_data
   - sim_8bit_count_data
   - sim_rand_ready_8bit_count_data
+  - sim_cocotb

@@ -60,15 +60,18 @@ def random_bool():
 def start_clock(dut):
   cocotb.start_soon(Clock(dut.m_axis_aclk, 2, units="ns").start())
   cocotb.start_soon(Clock(dut.s_axis_aclk, 2, units="ns").start())
+  cocotb.start_soon(Clock(dut.data_count_aclk, 2, units="ns").start())
 
 # Function: reset_dut
 # Cocotb coroutine for resets, used with await to make sure system is reset.
 async def reset_dut(dut):
   dut.m_axis_arstn.value = 0
   dut.s_axis_arstn.value = 0
+  dut.data_count_arstn.value = 0
   await Timer(5, units="ns")
   dut.m_axis_arstn.value = 1
   dut.s_axis_arstn.value = 1
+  dut.data_count_arstn.value = 1
 
 # Function: single_word
 # Coroutine that is identified as a test routine. This routine tests for writing a single word, and
@@ -88,8 +91,10 @@ async def single_word(dut):
 
     for x in range(0, 256):
         data = x.to_bytes(length = 1, byteorder='little') * dut.BUS_WIDTH.value
+        tx_frame = AxiStreamFrame(data, tdest=x%(2**dut.s_axis_tdest.value.n_bits), tuser=(x-255)%(2**dut.s_axis_tuser.value.n_bits), tx_complete=Event())
 
-        await axis_source.send(data)
+        await axis_source.send(tx_frame)
+        await tx_frame.tx_complete.wait()
 
         rx_frame = await axis_sink.recv()
 
@@ -97,7 +102,9 @@ async def single_word(dut):
 
         assert dut.s_axis_tready.value.integer == 1, "tready is not 1!"
 
-        assert rx_frame.tdata == data, "Input does not match output"
+        assert rx_frame.tdata == tx_frame.tdata, "Input tdata does not match output"
+        assert rx_frame.tdest == tx_frame.tdest, "Input tdest does not match output"
+        assert rx_frame.tuser == tx_frame.tuser, "Input tuser does not match output"
 
     await RisingEdge(dut.s_axis_aclk)
 
@@ -123,19 +130,23 @@ async def full_empty(dut):
         axis_sink.pause = True
 
         data = x.to_bytes(length = 1, byteorder='little') * dut.BUS_WIDTH.value * dut.FIFO_DEPTH.value
-        tx_frame = AxiStreamFrame(data, tx_complete=Event())
+        tx_frame = AxiStreamFrame(data, tdest=x%(2**dut.s_axis_tdest.value.n_bits), tuser=(x-255)%(2**dut.s_axis_tuser.value.n_bits), tx_complete=Event())
 
         await axis_source.send(tx_frame)
         await tx_frame.tx_complete.wait()
 
         await Timer(10, units="ns")
 
+        assert dut.data_count == dut.FIFO_DEPTH.value, "FIFO and DATA COUNT mismatch"
+
         assert dut.s_axis_tready.value.integer == 0, "tready is not 0!"
 
         axis_sink.pause = False
 
         rx_frame = await axis_sink.recv()
-        assert rx_frame.tdata == tx_frame.tdata, "data does not match"
+        assert rx_frame.tdata == tx_frame.tdata, "Input tdata does not match output"
+        assert rx_frame.tdest == tx_frame.tdest, "Input tdest does not match output"
+        assert rx_frame.tuser == tx_frame.tuser, "Input tuser does not match output"
 
     await RisingEdge(dut.s_axis_aclk)
 
@@ -163,13 +174,15 @@ async def random_ready(dut):
     for x in range(1024):
       data += random.randrange(256).to_bytes(length = 1, byteorder='little') * dut.BUS_WIDTH.value
 
-    tx_frame = AxiStreamFrame(data, tx_complete=Event())
+    tx_frame = AxiStreamFrame(data, tdest=data[0]%(2**dut.s_axis_tdest.value.n_bits), tuser=data[dut.BUS_WIDTH.value]%(2**dut.s_axis_tuser.value.n_bits), tx_complete=Event())
 
     await axis_source.send(tx_frame)
     await tx_frame.tx_complete.wait()
 
     rx_frame = await axis_sink.recv()
-    assert rx_frame.tdata == tx_frame.tdata, "data does not match"
+    assert rx_frame.tdata == tx_frame.tdata, "Input tdata does not match output"
+    assert rx_frame.tdest == tx_frame.tdest, "Input tdest does not match output"
+    assert rx_frame.tuser == tx_frame.tuser, "Input tuser does not match output"
 
     await RisingEdge(dut.s_axis_aclk)
 

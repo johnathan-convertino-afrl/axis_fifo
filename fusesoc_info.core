@@ -99,6 +99,9 @@ targets:
     parameters:
       - FIFO_DEPTH
       - BUS_WIDTH
+      - USER_WIDTH
+      - DEST_WIDTH
+      - COUNT_WIDTH
       
 parameters:
   RAND_READY:
@@ -129,6 +132,24 @@ parameters:
     datatype    : int
     default     : 8
     description : axi streaming data bus size in bytes.
+    paramtype   : vlogparam
+
+  USER_WIDTH:
+    datatype    : int
+    default     : 8
+    description : axi streaming user bus size in bits.
+    paramtype   : vlogparam
+
+  DEST_WIDTH:
+    datatype    : int
+    default     : 8
+    description : axi streaming dest bus size in bits.
+    paramtype   : vlogparam
+
+  COUNT_WIDTH:
+    datatype    : int
+    default     : 8
+    description : axi streaming count bus size in bits.
     paramtype   : vlogparam
     
 scripts:

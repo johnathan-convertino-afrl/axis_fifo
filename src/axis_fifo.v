@@ -108,9 +108,9 @@ module axis_fifo #(
     input                       data_count_arstn,
     output  [COUNT_WIDTH:0]     data_count
   );
-  
+
   `include "util_helper_math.vh"
-          
+
   // break apart data from fifo into the axis signals.
   localparam c_ARRAY_LENGTH = DEST_WIDTH + USER_WIDTH + BUS_WIDTH + (BUS_WIDTH*8) + 1;
   localparam c_TDATA_OFFSET = DEST_WIDTH + USER_WIDTH + BUS_WIDTH + 1;
@@ -118,26 +118,26 @@ module axis_fifo #(
   localparam c_TUSER_OFFSET = DEST_WIDTH + 1;
   localparam c_TDEST_OFFSET = 1;
   localparam c_TLAST_OFFSET = 0;
-  
+
   //calculate widths
   localparam c_PWR_FIFO   = clogb2(FIFO_DEPTH); 
   localparam c_FIFO_DEPTH = 2 ** c_PWR_FIFO;
   //ROUND UP FIXXXXX MEEE
   localparam c_FIFO_WIDTH = c_ARRAY_LENGTH/8 + ((c_ARRAY_LENGTH % 8) != 0 ? 1 : 0);
-  
+
   wire [(c_FIFO_WIDTH*8)-1:0] s_axis_concat_data;
-  
+
   //write signals
   wire s_wr_full;
-  
+
   //read signals
   wire s_rd_valid;
   wire s_rd_empty;
   wire s_rd_en;
   wire [(c_FIFO_WIDTH*8)-1:0] s_rd_data;
-  
+
   assign s_axis_tready = ~s_wr_full & s_axis_arstn;
-  
+
   assign s_axis_concat_data[(c_FIFO_WIDTH*8)-1:((BUS_WIDTH*8) + c_TDATA_OFFSET)] = 0;
   assign s_axis_concat_data[((BUS_WIDTH*8)-1+c_TDATA_OFFSET):c_TDATA_OFFSET]  = s_axis_tdata;
   assign s_axis_concat_data[(BUS_WIDTH-1+c_TKEEP_OFFSET):c_TKEEP_OFFSET]      = s_axis_tkeep;
@@ -182,7 +182,7 @@ module axis_fifo #(
       .data_count_rstn (data_count_arstn),
       .data_count      (data_count)
     );
-              
+
   /*
    * Module: axis_control
    *

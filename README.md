@@ -28,16 +28,6 @@
   - [axis_fifo.pdf](docs/manual/axis_fifo.pdf)
   - [github page](https://johnathan-convertino-afrl.github.io/axis_fifo/)
 
-### DEPENDENCIES
-#### Build
-  - AFRL:buffer:fifo
-  - AFRL:utility:helper:1.0.0
-  
-#### Simulation
-  - AFRL:simulation:axis_stimulator
-  - AFRL:simulation:clock_stimulator
-  - AFRL:utility:sim_helper
-
 ### PARAMETERS
 
 * FIFO_DEPTH : Depth of the fifo, must be a power of two number(divisable aka 256 = 2^8). Any non-power of two will be rounded up to the next closest.
@@ -73,6 +63,7 @@
 
 * RUN WITH: (fusesoc run --target=sim VENDER:CORE:NAME:VERSION)
   - default (for IP integration builds)
+  - lint
   - sim
   - sim_rand_data
   - sim_rand_ready_rand_data

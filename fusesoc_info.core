@@ -35,6 +35,16 @@ targets:
     description: Default for IP intergration.
     filesets: [src, dep]
 
+  lint:
+    description: Lint with Verible
+    filesets: [src]
+    toplevel: axis_fifo
+    default_tool: veriblelint
+    tools:
+      veriblelint:
+        rules:
+         - "-explicit-parameter-storage-type,-parameter-name-style,-line-length,-no-trailing-spaces"
+
   sim: &sim
     <<: *default
     description: Constant data value with file check.

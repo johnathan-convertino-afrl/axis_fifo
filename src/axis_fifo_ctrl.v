@@ -6,7 +6,8 @@
 // date:    2021/06/29
 //
 // about:   Brief
-// Wraps the standard FIFO with an axi streaming interface.
+// Wraps the standard FIFO with an axi streaming interface, Xilinx AXIS FIFO
+// Emulation.
 //
 // license: License MIT
 // Copyright 2021 Jay Convertino

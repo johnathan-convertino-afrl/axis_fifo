@@ -1,5 +1,6 @@
 # AXIS FIFO
 ### FIFO for AXI streaming
+---
 
 ![image](docs/manual/img/AFRL.png)
 
